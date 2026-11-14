@@ -25,6 +25,7 @@ section{padding:48px 0}.alt{background:var(--soft)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:flex;flex-direction:column}
 .tag{display:inline-block;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-d);margin-bottom:8px}
 .card ul{padding-left:1.2em;margin:0 0 1em}.card li{margin-bottom:.4em}
+.card h4{margin:14px 0 6px;font-size:1rem}.prices{list-style:none;padding:0;margin:0 0 10px}.prices li{padding:8px 0;border-top:1px solid var(--line,#e5e0d4)}.prices strong{display:block}
 .note{font-size:.93rem;color:var(--ink2);border-left:3px solid var(--gold);padding-left:12px}
 .card .btns{margin-top:auto;padding-top:12px}
 ol.steps{list-style:none;counter-reset:s;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
