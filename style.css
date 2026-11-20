@@ -43,6 +43,14 @@ ol.steps strong{display:block;font-weight:600;font-size:1.05rem;margin-bottom:4p
 .narrow{max-width:46rem}.prices li:first-child{border-top:0;padding-top:0}.card .prices:last-child{margin-bottom:0}
 footer{border-top:1px solid var(--line);padding:32px 0 40px;font-size:.88rem;color:var(--ink2)}footer p{margin:0 0 .6em}footer a{display:inline-block;padding:4px 0}
 .doc h2{font-size:1.25rem;margin-top:1.6em}
+.tl-drop{border:2px dashed var(--line);border-radius:var(--r);background:var(--card);padding:28px 20px;text-align:center}.tl-drop.on{border-color:var(--accent);background:var(--soft)}
+.tl-box{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:16px 0}.tl-box[hidden],#tl-sheetrow[hidden]{display:none}
+.tl-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 14px;margin:8px 0 14px}.tl-chk{display:block;font-size:.93rem;padding:4px 0}
+.tl-row{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin:10px 0}.tl-row select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.tl-sum{list-style:none;display:flex;flex-wrap:wrap;gap:12px;padding:0;margin:0 0 12px}.tl-sum li{background:var(--soft);border-radius:10px;padding:10px 16px}.tl-sum strong{font-size:1.3rem;margin-right:4px}
+.tl-scroll{overflow:auto;max-height:320px;border:1px solid var(--line);border-radius:10px}.tl-table{border-collapse:collapse;font-size:.85rem;width:100%}.tl-table th,.tl-table td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;white-space:nowrap}.tl-table th{background:var(--soft);position:sticky;top:0}
+.tl-bad{border-left-color:#b00020;color:#b00020}
+.tl-drop input[type=file]{max-width:100%}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 @media (max-width:760px){nav.dsk{display:none}details.mob{display:block}header.top{position:static}}
 @media (max-width:560px){.wrap{padding:0 20px}.hero{padding-top:40px;padding-bottom:28px}section{padding:36px 0}.card{padding:22px 20px}.btns .btn{width:100%}.brand{font-size:1.15rem}}
