@@ -18,7 +18,7 @@
     var h = '<article class="fv-doc"><h3>' + tipo + " n. " + esc(d.numero) + " del " + esc(F.itDate(d.data)) + '</h3><p class="note">File: ' + esc(d.file) + (d.fmt ? " · formato " + esc(d.fmt) : "") + "</p>";
     h += '<div class="fv-parties"><div><h4>Cedente/prestatore (chi emette)</h4>' + party(d.ced) + '</div><div><h4>Cessionario/committente (chi riceve)</h4>' + party(d.ces) + "</div></div>";
     if (d.causale.length) h += "<p><strong>Causale:</strong> " + esc(d.causale.join(" ")) + "</p>";
-    h += '<div class="tl-scroll fv-scroll"><table class="tl-table fv-table"><thead><tr><th>N.</th><th>Descrizione</th><th class="r">Quantità</th><th>U.m.</th><th class="r">Prezzo unit.</th><th class="r">IVA %</th><th class="r">Totale riga</th></tr></thead><tbody>";
+    h += '<div class="tl-scroll fv-scroll"><table class="tl-table fv-table"><thead><tr><th>N.</th><th>Descrizione</th><th class="r">Quantità</th><th>U.m.</th><th class="r">Prezzo unit.</th><th class="r">IVA %</th><th class="r">Totale riga</th></tr></thead><tbody>';
     h += d.righe.map(function (r) { return "<tr><td>" + esc(r.n) + "</td><td class=\"w\">" + esc(r.desc) + "</td><td class=\"r\">" + qty(r.qta) + "</td><td>" + esc(r.um) + "</td><td class=\"r\">" + money(r.pu) + '</td><td class="r">' + (r.aliq === null ? "" : qty(r.aliq)) + (r.nat ? " " + esc(r.nat) : "") + '</td><td class="r">' + money(r.pt) + "</td></tr>"; }).join("");
     h += "</tbody></table></div>";
     if (d.riep.length) {
