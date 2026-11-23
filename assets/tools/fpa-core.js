@@ -251,8 +251,15 @@
 
   var HEAD = ["File", "Formato", "Tipo documento", "Numero", "Data", "Divisa", "Cedente/prestatore P.IVA", "Cedente/prestatore C.F.", "Cedente/prestatore denominazione",
     "Cessionario/committente P.IVA", "Cessionario/committente C.F.", "Cessionario/committente denominazione", "Imponibile", "IVA", "Totale documento", "Origine totale",
-    "Scadenze", "Importo da pagare", "Modalità pagamento", "Causale"];
+    "Scadenze", "Importo da pagare", "Modalità pagamento", "Causale",
+    "Ritenuta tipo", "Ritenuta aliquota %", "Ritenuta importo", "Ritenuta causale pagamento", "Cassa previdenziale tipo", "Cassa aliquota %", "Cassa importo", "Bollo virtuale", "Bollo importo", "IBAN"];
   var LINES = ["File", "Numero fattura", "Data", "Cedente/prestatore", "N. linea", "Codice articolo", "Descrizione", "Quantità", "Unità di misura", "Prezzo unitario", "Prezzo totale", "Aliquota IVA %", "Natura IVA"];
+  var RIEP = ["File", "Numero fattura", "Data", "Cedente/prestatore", "Aliquota IVA %", "Natura", "Imponibile", "Imposta", "Esigibilità IVA", "Esigibilità (descrizione)", "Riferimento normativo"];
+  var ESIG = { I: "immediata", D: "differita", S: "scissione dei pagamenti (split payment)" };
+
+  /* colonna "uno o piu' valori": numero se unico, testo unito da "; " se piu' di uno, vuoto se assente */
+  function oneOrMany(vals) { var v = vals.filter(function (x) { return x !== "" && x !== null; }); if (!v.length) return ""; if (v.length === 1) return v[0]; var u = []; v.forEach(function (x) { if (u.indexOf(x) < 0) u.push(x); }); return u.length === 1 ? u[0] : u.join("; "); }
+  function sumOrEmpty(vals) { var v = vals.filter(function (x) { return x !== null; }); return v.length ? r2(v.reduce(function (a, b) { return a + b; }, 0)) : ""; }
 
   /* Returns {head: [rows], lines: [rows], warnings: [str]}; throws on non-FatturaPA content. */
   function parseInvoice(xmlText, fileName) {
@@ -264,7 +271,7 @@
     if (!hdr || !bodies.length) throw new Error("fattura incompleta: mancano intestazione o corpo");
     var ced = party(path(hdr, "CedentePrestatore")), ces = party(path(hdr, "CessionarioCommittente"));
     var fmt = txt(hdr, "DatiTrasmissione/FormatoTrasmissione");
-    var out = { head: [], lines: [], warnings: [], docs: [] };
+    var out = { head: [], lines: [], riep: [], warnings: [], docs: [] };
     bodies.forEach(function (bd, bi) {
       var dg = path(bd, "DatiGenerali/DatiGeneraliDocumento");
       if (!dg) { out.warnings.push("corpo " + (bi + 1) + ": DatiGeneraliDocumento mancante"); return; }
@@ -282,15 +289,28 @@
       }); });
       var causale = kids(dg, "Causale").map(function (c) { return c.t.trim(); }).join(" ");
       var numero = txt(dg, "Numero"), data = txt(dg, "Data");
+      var rit = kids(dg, "DatiRitenuta"), cas = kids(dg, "DatiCassaPrevidenziale");
+      var ibans = []; kids(bd, "DatiPagamento").forEach(function (dp) { kids(dp, "DettaglioPagamento").forEach(function (p) { var ib = txt(p, "IBAN"); if (ib && ibans.indexOf(ib) < 0) ibans.push(ib); }); });
+      var bolloImp = num(txt(dg, "DatiBollo/ImportoBollo")), bolloVirt = txt(dg, "DatiBollo/BolloVirtuale");
       var doc = { file: fileName + (bodies.length > 1 ? " (fattura " + (bi + 1) + " di " + bodies.length + ")" : ""), fmt: fmt, tipo: txt(dg, "TipoDocumento"), numero: numero, data: data, divisa: txt(dg, "Divisa"),
         causale: kids(dg, "Causale").map(function (c) { return c.t.trim(); }).filter(Boolean), ced: ced, ces: ces, imp: imp, iva: iva, tot: tot, orig: orig, righe: [], riep: [], pag: [],
+        ritenute: rit.map(function (r) { return { tipo: txt(r, "TipoRitenuta"), aliq: num(txt(r, "AliquotaRitenuta")), imp: num(txt(r, "ImportoRitenuta")), causale: txt(r, "CausalePagamento") }; }),
+        casse: cas.map(function (c) { return { tipo: txt(c, "TipoCassa"), aliq: num(txt(c, "AlCassa")), imp: num(txt(c, "ImportoContributoCassa")), imponibile: num(txt(c, "ImponibileCassa")), aliqIva: num(txt(c, "AliquotaIVA")) }; }),
+        iban: ibans.slice(),
         condPag: txt(path(bd, "DatiPagamento"), "CondizioniPagamento"), bollo: num(txt(dg, "DatiBollo/ImportoBollo")) };
       riep.forEach(function (r) { doc.riep.push({ aliq: num(txt(r, "AliquotaIVA")), nat: txt(r, "Natura"), imp: num(txt(r, "ImponibileImporto")), iva: num(txt(r, "Imposta")), esig: txt(r, "EsigibilitaIVA"), rif: txt(r, "RiferimentoNormativo") }); });
       kids(bd, "DatiPagamento").forEach(function (dp) { kids(dp, "DettaglioPagamento").forEach(function (p) { doc.pag.push({ scad: txt(p, "DataScadenzaPagamento"), mod: txt(p, "ModalitaPagamento"), imp: num(txt(p, "ImportoPagamento")), iban: txt(p, "IBAN"), ben: txt(p, "Beneficiario") }); }); });
       kids(path(bd, "DatiBeniServizi"), "DettaglioLinee").forEach(function (ln) { doc.righe.push({ n: txt(ln, "NumeroLinea"), desc: txt(ln, "Descrizione"), qta: num(txt(ln, "Quantita")), um: txt(ln, "UnitaMisura"), pu: num(txt(ln, "PrezzoUnitario")), pt: num(txt(ln, "PrezzoTotale")), aliq: num(txt(ln, "AliquotaIVA")), nat: txt(ln, "Natura") }); });
       out.docs.push(doc);
       out.head.push([fileName + (bodies.length > 1 ? " (fattura " + (bi + 1) + " di " + bodies.length + ")" : ""), fmt, txt(dg, "TipoDocumento"), numero, dateCell(data), txt(dg, "Divisa"),
-        ced.piva, ced.cf, ced.den, ces.piva, ces.cf, ces.den, imp, iva, tot, orig, dates.map(itDate).join("; "), anyPay ? r2(toPay) : "", modes.join("; "), causale]);
+        ced.piva, ced.cf, ced.den, ces.piva, ces.cf, ces.den, imp, iva, tot, orig, dates.map(itDate).join("; "), anyPay ? r2(toPay) : "", modes.join("; "), causale,
+        oneOrMany(rit.map(function (r) { return txt(r, "TipoRitenuta"); })), oneOrMany(rit.map(function (r) { return num(txt(r, "AliquotaRitenuta")); })), sumOrEmpty(rit.map(function (r) { return num(txt(r, "ImportoRitenuta")); })), oneOrMany(rit.map(function (r) { return txt(r, "CausalePagamento"); })),
+        oneOrMany(cas.map(function (c) { return txt(c, "TipoCassa"); })), oneOrMany(cas.map(function (c) { return num(txt(c, "AlCassa")); })), sumOrEmpty(cas.map(function (c) { return num(txt(c, "ImportoContributoCassa")); })),
+        bolloVirt, bolloImp === null ? "" : bolloImp, ibans.join("; ")]);
+      riep.forEach(function (r) {
+        var al = num(txt(r, "AliquotaIVA")), ib = num(txt(r, "ImponibileImporto")), ip = num(txt(r, "Imposta")), es = txt(r, "EsigibilitaIVA");
+        out.riep.push([fileName + (bodies.length > 1 ? " (fattura " + (bi + 1) + " di " + bodies.length + ")" : ""), numero, dateCell(data), ced.den, al === null ? "" : al, txt(r, "Natura"), ib === null ? "" : ib, ip === null ? "" : ip, es, ESIG[es] || "", txt(r, "RiferimentoNormativo")]);
+      });
       kids(path(bd, "DatiBeniServizi"), "DettaglioLinee").forEach(function (ln) {
         var codes = kids(ln, "CodiceArticolo").map(function (c) { return txt(c, "CodiceValore"); }).filter(Boolean).join("; ");
         out.lines.push([fileName, numero, dateCell(data), ced.den, num(txt(ln, "NumeroLinea")) === null ? txt(ln, "NumeroLinea") : num(txt(ln, "NumeroLinea")), codes, txt(ln, "Descrizione"),
@@ -304,13 +324,13 @@
   /* inputs: [{name, bytes}] -> {head, lines, files:[{name, ok, invoices, error}], skipped, truncated, total} ; max 20 invoice files per run */
   async function convert(inputs, opt) {
     var limit = (opt && opt.limit) || MAX_FILES;
-    var ex = await expand(inputs), res = { head: [HEAD], lines: [LINES], docs: [], files: [], skipped: ex.skipped, truncated: 0, total: ex.files.length, warnings: [] };
+    var ex = await expand(inputs), res = { head: [HEAD], lines: [LINES], riep: [RIEP], docs: [], files: [], skipped: ex.skipped, truncated: 0, total: ex.files.length, warnings: [] };
     var list = ex.files.slice(0, limit); res.truncated = Math.max(0, ex.files.length - limit);
     list.forEach(function (f) {
       try {
         var inner = f.kind === "p7m" ? extractP7m(f.bytes) : f.bytes;
         var r = parseInvoice(decodeXmlBytes(inner), f.name);
-        r.docs.forEach(function (x) { res.docs.push(x); }); r.head.forEach(function (x) { res.head.push(x); }); r.lines.forEach(function (x) { res.lines.push(x); });
+        r.docs.forEach(function (x) { res.docs.push(x); }); r.head.forEach(function (x) { res.head.push(x); }); r.lines.forEach(function (x) { res.lines.push(x); }); r.riep.forEach(function (x) { res.riep.push(x); });
         r.warnings.forEach(function (w) { res.warnings.push(f.name + ": " + w); });
         res.files.push({ name: f.name, ok: true, invoices: r.head.length });
       } catch (e) { res.files.push({ name: f.name, ok: false, error: e.message }); }
@@ -339,6 +359,6 @@
   }
   function toCsv(rows) { return rows.map(function (r) { return r.map(csvCell).join(";"); }).join("\r\n") + "\r\n"; }
 
-  return { MAX_FILES: MAX_FILES, HEAD: HEAD, LINES: LINES, parseXml: parseXml, parseInvoice: parseInvoice, extractP7m: extractP7m, decodeXmlBytes: decodeXmlBytes,
+  return { MAX_FILES: MAX_FILES, HEAD: HEAD, LINES: LINES, RIEP: RIEP, parseXml: parseXml, parseInvoice: parseInvoice, extractP7m: extractP7m, decodeXmlBytes: decodeXmlBytes,
     expand: expand, convert: convert, toSheetRows: toSheetRows, toCsv: toCsv, itDate: itDate };
 });

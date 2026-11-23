@@ -60,12 +60,13 @@
   function dlXlsx() {
     if (!st.res) return;
     var wb = XLSX.utils.book_new();
-    [["Testata", st.res.head], ["Righe", st.res.lines]].forEach(function (p) { var ws = XLSX.utils.aoa_to_sheet(F.toSheetRows(p[1])); ws["!cols"] = widths(p[1]); XLSX.utils.book_append_sheet(wb, ws, p[0]); });
+    [["Testata", st.res.head], ["Righe", st.res.lines], ["Riepilogo IVA", st.res.riep]].forEach(function (p) { var ws = XLSX.utils.aoa_to_sheet(F.toSheetRows(p[1])); ws["!cols"] = widths(p[1]); XLSX.utils.book_append_sheet(wb, ws, p[0]); });
     save(new Blob([XLSX.write(wb, { bookType: "xlsx", type: "array" })], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "fatture-elettroniche.xlsx"); track("download-xlsx");
   }
   function dlCsv(which) {
     if (!st.res) return;
-    save(new Blob(["﻿" + F.toCsv(which === "head" ? st.res.head : st.res.lines)], { type: "text/csv;charset=utf-8" }), which === "head" ? "fatture-testata.csv" : "fatture-righe.csv"); track("download-csv");
+    var rows = which === "head" ? st.res.head : which === "riep" ? st.res.riep : st.res.lines, nm = which === "head" ? "fatture-testata.csv" : which === "riep" ? "fatture-riepilogo-iva.csv" : "fatture-righe.csv";
+    save(new Blob(["﻿" + F.toCsv(rows)], { type: "text/csv;charset=utf-8" }), nm); track("download-csv");
   }
 
   document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro]") : null; if (a) ev("fpa-pro-clic"); });
@@ -79,5 +80,6 @@
     $("tl-dl").addEventListener("click", dlXlsx);
     $("tl-dl-csv-h").addEventListener("click", function () { dlCsv("head"); });
     $("tl-dl-csv-l").addEventListener("click", function () { dlCsv("lines"); });
+    $("tl-dl-csv-r").addEventListener("click", function () { dlCsv("riep"); });
   });
 })();
