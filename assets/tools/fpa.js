@@ -7,6 +7,8 @@
   function track(ev) { // solo contatori aggregati: mai contenuto o nomi dei file
     try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "/tool/fattura-elettronica-xml-excel/" + ev, title: "tool-fpa-" + ev, event: true }); } catch (e) {}
   }
+  var PRO_HREF = "mailto:hello@rinveta.com?subject=%5Bc%3Afpa-pro%5D%20Versione%20Pro%20E-FPA&body=Vorrei%20essere%20avvisato%20quando%20sar%C3%A0%20pronta%20la%20versione%20Pro.%0A%0AOgni%20mese%20ho%20circa%20questo%20numero%20di%20fatture%20(senza%20allegare%20fatture%20reali):%20";
+  function ev(name) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true }); } catch (e) {} }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function msg(t, bad) { var m = $("tl-msg"); m.textContent = t; m.className = bad ? "note tl-bad" : "note"; }
   function money(v) { return typeof v === "number" ? v.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : esc(v); }
@@ -19,6 +21,7 @@
       (bad.length ? "<li><strong>" + bad.length + "</strong> file con problemi</li>" : "");
     var issues = "";
     if (res.truncated) issues += '<p class="note tl-bad">Hai caricato ' + res.total + " file fattura: la versione gratuita ne elabora " + F.MAX_FILES + " per volta. Elaborati i primi " + F.MAX_FILES + "; gli altri " + res.truncated + " vanno ricaricati in un secondo lotto.</p>";
+    if (res.truncated) { issues += '<p class="note">Ti serve convertire più di 20 fatture insieme o ogni mese? Stiamo preparando una versione Pro: <a href="' + PRO_HREF + '" data-fpa-pro>scrivici e ti avvisiamo</a>.</p>'; ev("fpa-limite"); }
     if (bad.length || res.skipped.length || res.warnings.length) {
       issues += "<p><strong>Da controllare:</strong></p><ul>" +
         bad.map(function (f) { return "<li>" + esc(f.name) + ": " + esc(f.error) + "</li>"; }).join("") +
@@ -64,6 +67,8 @@
     if (!st.res) return;
     save(new Blob(["﻿" + F.toCsv(which === "head" ? st.res.head : st.res.lines)], { type: "text/csv;charset=utf-8" }), which === "head" ? "fatture-testata.csv" : "fatture-righe.csv"); track("download-csv");
   }
+
+  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro]") : null; if (a) ev("fpa-pro-clic"); });
 
   document.addEventListener("DOMContentLoaded", function () {
     var inp = $("tl-file"), drop = $("tl-drop");

@@ -6,6 +6,8 @@
   var TIPI = { TD01: "Fattura", TD02: "Acconto/anticipo su fattura", TD03: "Acconto/anticipo su parcella", TD04: "Nota di credito", TD05: "Nota di debito", TD06: "Parcella", TD16: "Integrazione fattura reverse charge interno", TD17: "Integrazione/autofattura acquisto servizi dall'estero", TD18: "Integrazione acquisto beni intra UE", TD19: "Integrazione/autofattura acquisto beni ex art. 17 c.2", TD20: "Autofattura/regolarizzazione", TD24: "Fattura differita", TD25: "Fattura differita (art. 36 c.4)", TD26: "Cessione beni ammortizzabili / passaggi interni", TD27: "Autofattura per autoconsumo o cessioni gratuite", TD28: "Acquisti da San Marino con IVA" };
   var MP = { MP01: "Contanti", MP02: "Assegno", MP03: "Assegno circolare", MP05: "Bonifico", MP08: "Carta di pagamento", MP12: "RIBA", MP19: "SEPA Direct Debit", MP23: "PagoPA" };
   function track(ev) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "/tool/apri-file-p7m-fattura-xml/" + ev, title: "tool-fpv-" + ev, event: true }); } catch (e) {} }
+  var PRO_HREF = "mailto:hello@rinveta.com?subject=%5Bc%3Afpa-pro%5D%20Versione%20Pro%20E-FPA&body=Vorrei%20essere%20avvisato%20quando%20sar%C3%A0%20pronta%20la%20versione%20Pro.%0A%0AOgni%20mese%20ho%20circa%20questo%20numero%20di%20fatture%20(senza%20allegare%20fatture%20reali):%20";
+  function ev(name) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true }); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function money(v) { return typeof v === "number" ? v.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""; }
   function qty(v) { return typeof v === "number" ? v.toLocaleString("it-IT", { maximumFractionDigits: 4 }) : ""; }
@@ -42,6 +44,7 @@
     $("fv-out").hidden = false;
     var issues = "";
     if (res.truncated) issues += '<p class="note tl-bad">Hai caricato ' + res.total + " file fattura: ne vengono mostrati " + F.MAX_FILES + ". Ricarica gli altri " + res.truncated + " in un secondo momento.</p>";
+    if (res.truncated) { issues += '<p class="note">Ti serve convertire più di 20 fatture insieme o ogni mese? Stiamo preparando una versione Pro: <a href="' + PRO_HREF + '" data-fpa-pro>scrivici e ti avvisiamo</a>.</p>'; ev("fpa-limite"); }
     if (bad.length || res.skipped.length || res.warnings.length) {
       issues += "<p><strong>Da controllare:</strong></p><ul>" + bad.map(function (f) { return "<li>" + esc(f.name) + ": " + esc(f.error) + "</li>"; }).join("") +
         res.skipped.map(function (s) { return "<li>" + esc(s.name) + ": " + esc(s.reason) + " (saltato)</li>"; }).join("") + res.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
@@ -65,6 +68,8 @@
     } catch (e) { msg("Non è stato possibile leggere questi file.", true); }
     busy = false;
   }
+
+  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro]") : null; if (a) ev("fpa-pro-clic"); });
 
   document.addEventListener("DOMContentLoaded", function () {
     var inp = $("fv-file"), drop = $("fv-drop");
