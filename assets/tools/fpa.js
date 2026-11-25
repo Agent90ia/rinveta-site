@@ -69,7 +69,7 @@
     save(new Blob(["﻿" + F.toCsv(rows)], { type: "text/csv;charset=utf-8" }), nm); track("download-csv");
   }
 
-  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro]") : null; if (a) ev("fpa-pro-clic"); });
+  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro], a[data-fpa-servizio]") : null; if (a) ev(a.hasAttribute("data-fpa-servizio") ? "fpa-servizio-clic" : "fpa-pro-clic"); });
 
   document.addEventListener("DOMContentLoaded", function () {
     var inp = $("tl-file"), drop = $("tl-drop");

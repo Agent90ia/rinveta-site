@@ -69,7 +69,7 @@
     busy = false;
   }
 
-  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro]") : null; if (a) ev("fpa-pro-clic"); });
+  document.addEventListener("click", function (e) { var a = e.target && e.target.closest ? e.target.closest("a[data-fpa-pro], a[data-fpa-servizio]") : null; if (a) ev(a.hasAttribute("data-fpa-servizio") ? "fpa-servizio-clic" : "fpa-pro-clic"); });
 
   document.addEventListener("DOMContentLoaded", function () {
     var inp = $("fv-file"), drop = $("fv-drop");
